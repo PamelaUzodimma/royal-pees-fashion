@@ -1,21 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminSupabaseClient } from '@/lib/supabase/server';
-import { generateOrderId, buildOrderMessage } from '@/lib/order';
-import { Cart, CartItem } from '@/types';
-
-interface CheckoutLine {
-  productId: string;
-  size: string | null;
-  qty: number;
+import { NextResponse } from 'next/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getActiveProducts } from '@/lib/products';
+ 
+export const dynamic = 'force-dynamic';
+ 
+export async function GET() {
+  const supabase = createServerSupabaseClient();
+  const { products, error } = await getActiveProducts(supabase);
+ 
+  if (error) return NextResponse.json({ error }, { status: 500 });
+  return NextResponse.json({ products });
 }
-
-export async function POST(request: NextRequest) {
-  const body = (await request.json()) as { items: CheckoutLine[] };
-  const lines = body.items ?? [];
-
-  if (!lines.length) {
-    return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
-  }
 
   const supabase = createAdminSupabaseClient();
 
